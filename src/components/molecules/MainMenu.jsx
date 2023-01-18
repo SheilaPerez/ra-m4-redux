@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
+import { NavLink } from 'react-router-dom'
 import { main } from '../../constants'
 
 const MainMenuStyled = styled.ul`
@@ -16,13 +17,22 @@ const MainMenuStyled = styled.ul`
     }
   }
 `
+const LinkStyled = styled(NavLink)`
+  text-decoration: none;
+  cursor: pointer;
+  color: black;
+
+  &.active {
+    font-weight: bold;
+  }
+`
 
 function MainMenu() {
   return (
     <MainMenuStyled>
       {Object.values(main).map(({ path, label }) => (
         <li key={path}>
-          <a href={path}>{label}</a>
+          <LinkStyled to={path}>{label}</LinkStyled>
         </li>
       ))}
     </MainMenuStyled>
