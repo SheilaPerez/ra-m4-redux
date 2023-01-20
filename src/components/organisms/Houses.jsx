@@ -11,9 +11,10 @@ import { getHouses, loadMoreHouses } from '../../Store/houses.slice'
 const HousesStyled = styled(FlexBox)``
 
 function Houses() {
+  // El useFetch sobra, debajo usas getHouses
   const { loading, isError, isSuccess } = useFetch(urls.houses)
   const dispatch = useDispatch()
-  const housesStore = useSelector((store) => store.housesStore)
+  const housesStore = useSelector((store) => store.housesStore) // Seria housesSlice en todo caso
   const { houses } = housesStore
 
   useEffect(() => {
@@ -30,6 +31,7 @@ function Houses() {
       {isError && <div>Error</div>}
       {isSuccess && (
         <Grid gridGap="32px">
+          {/* Filtrar aquí */}
           {houses.pagedHouses.map((house) => (
             <HouseCard
               key={house.id}
