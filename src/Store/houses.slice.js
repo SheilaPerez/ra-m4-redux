@@ -2,85 +2,71 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { urls } from '../constants'
 
-
-function getPagedHouses(state, currentPage) {
-  if (currentPage === 1) {
-    return state.allIds.slice(0, 9).map((houseId) => state.byId[houseId]);
-  } 
-  
-  const nextHouses = state.allIds.slice(((currentPage * 9) - 9), currentPage * 8).map((houseId) => state.byId[houseId])
-  if (nextHouses.length < 9) {
-   state.hideShowMore = true;
-  }
- return nextHouses;
-  
-}
-
 export const getHouses = createAsyncThunk('houses/getHouses',
-  async () => {
-    const res = await fetch(urls.houses)
-    const data = await res.json()
-    return data
+  async (currentPage) => {
+    try {
+     const queryParams = new URLSearchParams({
+      _page: currentPage,
+      _limit: 9
+    });
+
+      const res = await fetch(`${urls.houses}?${queryParams.toString()}`)
+      const data = await res.json();
+      return data
+    } catch(err) {
+      return err.response.data
+    }
   }
 )
+
+const initialState = {
+    reqStatus: {
+      isSuccess: false,
+      isError: false,
+      isLoading: false,
+      hasMore: true,
+    },
+    hideShowMore: false,
+    selectedCity: null,
+    selectedType: null,
+    currentPage: 1,
+    cities: [],
+    type: [],
+    houses: {
+      byId: {},
+      allIds: [],
+    }
+}
+
 export const housesSlice = createSlice({
     name: 'houses',
-    initialState: {
-        reqStatus: 'initial',
-        hideShowMore: false,
-        selectedCity: "",
-        selectedType:"",
-        currentPage: 1,
-        cities: [{
-          value: "",
-          text: ""
-        }],
-        type: [{
-          value: "",
-          text: ""
-        }],
-        houses: {
-          pagedHouses: [],
-          byId: {},
-          allIds: [],
-        }
-    },
+    initialState,
     reducers: {
       loadMoreHouses: (state) => {
         state.currentPage += 1;
-        state.houses.pagedHouses.push(...getPagedHouses(state.houses, state.currentPage))
       },
-      citySelected: (state, action) => {
-        const city = action.payload;
-        state.selectedCity = city
-      },
-      typeSelected: (state, action) => {
-        const type = action.payload;
-        state.selectedType = type
-      },
-      filterResults: (state) => {
-        state.houses.pagedHouses = state.houses.allIds.map((houseId) => state.houses.byId[houseId]).filter((house) => {
-          state.hideShowMore = true;
-          if(state.selectedCity && state.selectedType === "") {
-            return house.city === state.selectedCity 
-
-          }
-          if(state.selectedType && state.selectedCity === "") {
-            return house.type === state.selectedType
-          }
-          if(state.selectedCity && state.selectedType) {
-            return house.city === state.selectedCity && house.type === state.selectedType
-          }
-          return true;
-      })
-        }
+      setFilters: (state, action) => {  
+        const {city, type} = action.payload;
+        state.selectedCity = city;
+        state.selectedType = type;
+      }
     },
     extraReducers: (builder) => {
       builder.addCase(getHouses.pending, (state) => {
-        state.reqStatus = 'loading'
+        state.reqStatus = {
+          isSuccess: false,
+          isError: false,
+          isLoading: true
+        }
       })
       builder.addCase(getHouses.fulfilled, (state, action) => {
-        state.reqStatus = 'success'
+        state.reqStatus = {
+          isSuccess: true,
+          isError: false,
+          isLoading: false,
+          hasMore: action.payload.length !== 0,
+        }
+        
         action.payload.forEach((house) => { 
           state.houses.byId[house.id] = house
           if(!state.houses.allIds.includes(house.id)) {
@@ -101,14 +87,17 @@ export const housesSlice = createSlice({
             })
           }
         })
-        state.houses.pagedHouses = getPagedHouses(state.houses, 1);
       })
       builder.addCase(getHouses.rejected, (state) => {
-        state.reqStatus = 'error'
+        state.reqStatus = {
+          isSuccess: false,
+          isError: true,
+          isLoading: false
+        }
       })
     }
   });
 
-export const { loadMoreHouses, typeSelected, citySelected, filterResults } = housesSlice.actions;
+export const { loadMoreHouses, setFilters } = housesSlice.actions;
 export default housesSlice.reducer
 

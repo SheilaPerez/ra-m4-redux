@@ -1,14 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import { useSelector, useDispatch } from 'react-redux'
 import { colors, Container, dimensions, FlexBox } from '../../styles'
 import { Button, Icon } from '../atoms'
 import { SelectGroup } from '../molecules'
-import {
-  typeSelected,
-  citySelected,
-  filterResults,
-} from '../../Store/houses.slice'
+import { setFilters } from '../../Store/houses.slice'
 
 const SubHeaderStyled = styled(FlexBox)`
   padding-top: ${dimensions.spacing.xl};
@@ -33,19 +29,13 @@ const FormStyled = styled(FlexBox).attrs({ as: 'form' })`
 `
 
 function SubHeader({ ...props }) {
-  const houses = useSelector((state) => state.housesStore)
+  const houses = useSelector((state) => state.housesSlice)
+  const [typeFilterValue, setTypeFilterValue] = useState(null)
+  const [cityFilterValue, setCityFilterValue] = useState(null)
   const dispatch = useDispatch()
 
-  const handleChangeType = (e) => {
-    dispatch(typeSelected(e.target.value))
-  }
-
-  const handleChangeCity = (e) => {
-    dispatch(citySelected(e.target.value))
-  }
-
   const handleClickSearch = () => {
-    dispatch(filterResults())
+    dispatch(setFilters({ city: cityFilterValue, type: typeFilterValue }))
   }
   return (
     <SubHeaderStyled {...props}>
@@ -57,7 +47,7 @@ function SubHeader({ ...props }) {
             defaultText="Piso, chalet o garaje..."
             hideLabel
             options={houses.type}
-            onChange={(e) => handleChangeType(e)}
+            onChange={(e) => setTypeFilterValue(e.target.value)}
           />
           <SelectGroup
             id="ciudad"
@@ -65,7 +55,7 @@ function SubHeader({ ...props }) {
             defaultText="Madrid, Barcelona o Zaragoza..."
             hideLabel
             options={houses.cities}
-            onChange={(e) => handleChangeCity(e)}
+            onChange={(e) => setCityFilterValue(e.target.value)}
           />
 
           <Button type="button" onClick={handleClickSearch}>

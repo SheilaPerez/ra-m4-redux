@@ -3,6 +3,6 @@ import housesReducer from './houses.slice';
 
 export default configureStore({ 
     reducer: {
-        housesStore: housesReducer,
+        housesSlice: housesReducer,
     }
 })

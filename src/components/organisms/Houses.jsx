@@ -3,22 +3,27 @@ import styled from 'styled-components'
 import { useSelector, useDispatch } from 'react-redux'
 import { Button } from '../atoms'
 import { HouseCard } from '../molecules'
-import { useFetch } from '../../hooks'
 import { FlexBox, Grid } from '../../styles'
-import { urls } from '../../constants'
 import { getHouses, loadMoreHouses } from '../../Store/houses.slice'
+import {
+  selectHouses,
+  selectReqStatus,
+  selectCurrentPage,
+} from '../../Store/houses.selectors'
 
 const HousesStyled = styled(FlexBox)``
 
 function Houses() {
-  const { loading, isError, isSuccess } = useFetch(urls.houses)
   const dispatch = useDispatch()
-  const housesStore = useSelector((store) => store.housesStore)
-  const { houses } = housesStore
+  const houses = useSelector((store) => selectHouses(store.housesSlice))
+  const reqStatus = useSelector((store) => selectReqStatus(store.housesSlice))
+  const currentPage = useSelector((store) =>
+    selectCurrentPage(store.housesSlice),
+  )
 
   useEffect(() => {
-    dispatch(getHouses())
-  }, [dispatch])
+    dispatch(getHouses(currentPage))
+  }, [dispatch, currentPage])
 
   const loadMore = () => {
     dispatch(loadMoreHouses())
@@ -26,23 +31,21 @@ function Houses() {
 
   return (
     <HousesStyled>
-      {loading && <div>Loading...</div>}
-      {isError && <div>Error</div>}
-      {isSuccess && (
+      {reqStatus.isLoading && <div>Loading...</div>}
+      {reqStatus.isError && <div>Error</div>}
+      {reqStatus.isSuccess && (
         <Grid gridGap="32px">
-          {houses.pagedHouses.map((house) => (
+          {houses.map((house) => (
             <HouseCard
-              key={house.id}
               title={house.title}
-              price={`${house.price}€`}
+              price={house.price}
               img={house.image}
-              link=""
             />
           ))}
         </Grid>
       )}
       <FlexBox align="center">
-        {!houses.hideShowMore && (
+        {reqStatus.hasMore && (
           <Button style={{ marginTop: '2rem' }} onClick={loadMore}>
             Load more
           </Button>
