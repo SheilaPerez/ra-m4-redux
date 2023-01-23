@@ -5,21 +5,15 @@ import { Button } from '../atoms'
 import { HouseCard } from '../molecules'
 import { FlexBox, Grid } from '../../styles'
 import { getHouses, loadMoreHouses } from '../../Store/houses.slice'
-import {
-  selectHouses,
-  selectReqStatus,
-  selectCurrentPage,
-} from '../../Store/houses.selectors'
+import { filterHouses } from '../../helpers'
 
 const HousesStyled = styled(FlexBox)``
 
 function Houses() {
   const dispatch = useDispatch()
-  const houses = useSelector((store) => selectHouses(store.housesSlice))
-  const reqStatus = useSelector((store) => selectReqStatus(store.housesSlice))
-  const currentPage = useSelector((store) =>
-    selectCurrentPage(store.housesSlice),
-  )
+  const housesSlice = useSelector((store) => store.housesSlice)
+  const { reqStatus, houses, currentPage, selectedCity, selectedType } =
+    housesSlice
 
   useEffect(() => {
     dispatch(getHouses(currentPage))
@@ -35,13 +29,17 @@ function Houses() {
       {reqStatus.isError && <div>Error</div>}
       {reqStatus.isSuccess && (
         <Grid gridGap="32px">
-          {houses.map((house) => (
-            <HouseCard
-              title={house.title}
-              price={house.price}
-              img={house.image}
-            />
-          ))}
+          {houses.allIds
+            .filter((houseId) =>
+              filterHouses(houses.byId[houseId], selectedCity, selectedType),
+            )
+            .map((houseId) => (
+              <HouseCard
+                title={houses.byId[houseId].title}
+                price={houses.byId[houseId].price}
+                img={houses.byId[houseId].image}
+              />
+            ))}
         </Grid>
       )}
       <FlexBox align="center">
